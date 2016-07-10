@@ -25,8 +25,8 @@ public:
 		: fileName(_fileName),section(_section) {}
 	~IniNode();
 
-	void SetValue(std::string, std::string);
-	std::string GetValue(std::string);
+	void setValue(std::string, std::string);
+	std::string getValue(std::string);
 
 	std::string operator[](std::string);
 };

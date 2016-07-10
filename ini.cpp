@@ -24,7 +24,7 @@ IniNode::~IniNode()
 {
 }
 
-void IniNode::SetValue(std::string key, std::string value)
+void IniNode::setValue(std::string key, std::string value)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	std::wstring wFileName = converter.from_bytes(fileName);
@@ -43,7 +43,7 @@ void IniNode::SetValue(std::string key, std::string value)
 	}
 }
 
-std::string IniNode::GetValue(std::string key)
+std::string IniNode::getValue(std::string key)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	std::wstring wFileName = converter.from_bytes(fileName);
