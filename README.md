@@ -7,9 +7,9 @@ Ini reader and writer class in C++
 #include "ini.h"
 ...
 IniFile ini("myfile.ini");
-std::string value1 = ini["MySection"].GetValue("MyKey");
+std::string value1 = ini["MySection"].getValue("MyKey");
 std::string value2 = ini["MySection"]["MyKey"];          // same as above
 
-ini["MySection"].SetValue("MyKey","aaa");
+ini["MySection"].setValue("MyKey","aaa");
 
 ```
