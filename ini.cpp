@@ -43,6 +43,36 @@ void IniNode::setValue(std::string key, std::string value)
 	}
 }
 
+int IniNode::getInt(std::string key)
+{
+	return std::atoi(getValue(key).c_str());
+}
+
+char IniNode::getChar(std::string key)
+{
+	return std::atoi(getValue(key).c_str());
+}
+
+float IniNode::getFloat(std::string key)
+{
+	return std::atof(getValue(key).c_str());
+}
+
+double IniNode::getDouble(std::string key)
+{
+	return std::atof(getValue(key).c_str());
+}
+
+long IniNode::getLong(std::string key)
+{
+	return std::atol(getValue(key).c_str());
+}
+
+long long IniNode::getLongLong(std::string key)
+{
+	return std::atoll(getValue(key).c_str());
+}
+
 std::string IniNode::getValue(std::string key)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
