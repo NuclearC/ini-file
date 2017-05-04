@@ -6,10 +6,17 @@ Ini reader and writer class in C++
 
 #include "ini.h"
 ...
-IniFile ini("myfile.ini");
-std::string value1 = ini["MySection"].getValue("MyKey");
-std::string value2 = ini["MySection"]["MyKey"];          // same as above
+nc::Ini ini(".\\file.ini");
 
-ini["MySection"].setValue("MyKey","aaa");
+ini.Load();
+// reading
+auto node = ini["MySection"]; // returns IniNode
+auto value = ini["MySection"]["MyProperty"]; // returns std::string
+auto db = std::atoi(ini["MySection"]["MyNumber"].c_str()); // get value as signed 32-bit integer 
+
+// writing
+ini["MySection"].Set("property", "value"); // set new property with value
+
+ini.Save(); // save ini file
 
 ```
