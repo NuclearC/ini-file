@@ -1,128 +1,123 @@
-// ----------------------------------------------------- //
-//                                                       //
-//             Ini File C++ Libraries                    //
-//               Copyright (C) 2016                      //
-//                  by NucleArc                          //
-//                                                       //
-// ----------------------------------------------------- //
-
+/*
+    Ini File I/O
+    Copyright (c) 2016-2017 NuclearC
+*/
 
 #include "ini.h"
-#include <Windows.h>
 
+namespace nc {
+    Ini::Ini(const std::string & _File) : file(_File)
+    {
+    }
 
-IniFile::~IniFile()
-{
-}
+    Ini::Ini(const Ini & _Other)
+    {
+        file = _Other.file;
+    }
 
-IniNode IniFile::operator[](std::string section)
-{
-	return IniNode(fileName, section);
-}
+    Ini::~Ini()
+    {
+    }
 
-IniNode::~IniNode()
-{
-}
+    IniNode& Ini::operator[](const std::string & _NodeName)
+    {
+        if (nodes.size() > 0 && nodes.find(_NodeName) != nodes.end())
+            return nodes[_NodeName];
+        else
+            throw std::exception("invalid node name");
+    }
 
-void IniNode::setValue(std::string key, std::string value)
-{
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	std::wstring wFileName = converter.from_bytes(fileName);
-	std::wstring wSection = converter.from_bytes(section);
-	std::wstring wKey = converter.from_bytes(key);
-	std::wstring wValue = converter.from_bytes(value);
+    void Ini::Save()
+    {
+        if (nodes.size() < 1)
+            return;
 
-	if (WritePrivateProfileString(
-		wSection.c_str(),
-		wKey.c_str(),
-		wValue.c_str(),
-		wFileName.c_str()) != 0)
-	{
-		throw std::exception("unable to write Ini content");
-		return;
-	}
-}
+        if (fs.is_open())
+            fs.close();
 
-int IniNode::getInt(std::string key)
-{
-	return std::atoi(getValue(key).c_str());
-}
+        fs.open(file, std::ios::out | std::ios::trunc);
 
-char IniNode::getChar(std::string key)
-{
-	return std::atoi(getValue(key).c_str());
-}
+        for (auto it = nodes.begin(); it != nodes.end(); it++) {
+            fs << "[" << it->first << "]\n";
 
-float IniNode::getFloat(std::string key)
-{
-	return std::atof(getValue(key).c_str());
-}
+            if (it->second.values.size() < 1)
+                continue;
 
-double IniNode::getDouble(std::string key)
-{
-	return std::atof(getValue(key).c_str());
-}
+            for (auto it2 = it->second.values.begin(); it2 != it->second.values.end();
+                it2++) {
+                fs << it2->first;
 
-long IniNode::getLong(std::string key)
-{
-	return std::atol(getValue(key).c_str());
-}
+                if (!it2->second.empty())
+                    fs << "=" << it2->second;
+                fs << "\n";
+            }
 
-long long IniNode::getLongLong(std::string key)
-{
-	return std::atoll(getValue(key).c_str());
-}
+            fs << "\n";
+        }
+    }
 
-std::string IniNode::getValue(std::string key)
-{
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	std::wstring wFileName = converter.from_bytes(fileName);
-	std::wstring wSection = converter.from_bytes(section);
-	std::wstring wKey = converter.from_bytes(key);
+    void Ini::Load()
+    {
+        if (fs.is_open()) {
+            fs.close();
+        }
 
-	wchar_t wValue[256];
-	GetPrivateProfileString(
-		wSection.c_str(),
-		wKey.c_str(),
-		L"",
-		wValue,
-		256,
-		wFileName.c_str());
+        fs.open(file, std::ios::out | std::ios::in);
+        
+        if (!fs.is_open()) {
+            throw std::exception("failed to open the file");
+        }
 
-	if (wValue == 0)
-	{
-		throw std::exception("unable to read Ini content");
-		return std::string();
-	}
+        std::string line, token;
 
-	std::string value = std::string(converter.to_bytes(wValue));
+        while (std::getline(fs, line)) {
+            if (line.length() < 3)
+                continue;
 
-	return value;
-}
+            if (line.front() == '[' && line.find(']') != std::string::npos) {
+                token = line.substr(1, line.find(']') - 1);
 
-std::string IniNode::operator[](std::string key)
-{
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	std::wstring wFileName = converter.from_bytes(fileName);
-	std::wstring wSection = converter.from_bytes(section);
-	std::wstring wKey = converter.from_bytes(key);
+                IniNode node;
+                node.name = token;
+                node.owner = this;
 
-	wchar_t wValue[256];
-	GetPrivateProfileString(
-		wSection.c_str(),
-		wKey.c_str(),
-		L"",
-		wValue,
-		256,
-		wFileName.c_str());
+                size_t old_pos = fs.tellg();
 
-	if (wValue == 0)
-	{
-		throw std::exception("unable to read Ini content");
-		return std::string();
-	}
+                while (std::getline(fs, line)) {
+                    if (line.length() < 3)
+                        continue;
 
-	std::string value = std::string(converter.to_bytes(wValue));
+                    if (line.front() == '[' && line.find(']') != std::string::npos) {
+                        fs.seekg(old_pos);
+                        break;
+                    }
+                    else if (line.front() != '#' && line.front() != ';') {
+                        auto pair = Split(line, '=');
 
-	return value;
-}
+                        node.Set(pair.first, pair.second);
+                    }
+                }
+
+                nodes[token] = node;
+            }
+        }
+    }
+
+    const std::string & IniNode::operator[](const std::string & _ValueName)
+    {
+        return Get(_ValueName);
+    }
+
+    void IniNode::Set(const std::string & _Name, const std::string & _Value)
+    {
+        values[_Name] = _Value;
+    }
+
+    const std::string & IniNode::Get(const std::string & _Name)
+    {
+        if (values.size() > 0 && values.find(_Name) != values.end())
+            return values[_Name];
+        else
+            throw std::exception("invalid property name");
+    }
+} // namespace nc
