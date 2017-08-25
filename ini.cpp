@@ -81,14 +81,13 @@ namespace nc {
                 node.name = token;
                 node.owner = this;
 
-                size_t old_pos = fs.tellg();
-
                 while (std::getline(fs, line)) {
                     if (line.length() < 3)
                         continue;
 
                     if (line.front() == '[' && line.find(']') != std::string::npos) {
-                        fs.seekg(old_pos);
+                        nodes[token] = node;
+                        token = node.name = line.substr(1, line.find(']') - 1);
                         break;
                     }
                     else if (line.front() != '#' && line.front() != ';') {
