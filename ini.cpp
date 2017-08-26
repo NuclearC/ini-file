@@ -88,11 +88,12 @@ namespace nc {
                     if (line.front() == '[' && line.find(']') != std::string::npos) {
                         nodes[token] = node;
                         token = node.name = line.substr(1, line.find(']') - 1);
-                        break;
+                        // break;
                     }
                     else if (line.front() != '#' && line.front() != ';') {
                         auto pair = Split(line, '=');
-
+                        trim(pair.first);
+                        trim(pair.second);
                         node.Set(pair.first, pair.second);
                     }
                 }
